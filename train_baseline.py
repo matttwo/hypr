@@ -14,7 +14,7 @@ from tqdm import tqdm
 import copy
 
 from dataset.inaturalist import INat_Birds
-from models.resnet import ResNet
+from models.resnet import ResNet, resnet18
 
 parser = argparse.ArgumentParser(description='Trains an iNaturalist classifier',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -100,7 +100,7 @@ std = [0.2138, 0.2125, 0.2598]
 # test_transform = trn.Compose([trn.ToTensor(), trn.Normalize(mean, std)])
 
 if args.dataset == 'iNat':
-    inat_birds = INat_Birds()
+    inat_birds = INat_Birds('dataset/')
     train_data = inat_birds.train_data
     test_data = inat_birds.test_data
     num_classes = len(inat_birds.dataset.classes)
@@ -109,6 +109,13 @@ calib_indicator = ''
 if args.calibration:
     train_data, val_data = validation_split(train_data, val_share=0.1)
     calib_indicator = '_calib'
+
+train_loader = torch.utils.data.DataLoader(
+    train_data, batch_size=args.batch_size, shuffle=True,
+    num_workers=args.prefetch, pin_memory=True)
+test_loader = torch.utils.data.DataLoader(
+    test_data, batch_size=args.test_bs, shuffle=False,
+    num_workers=args.prefetch, pin_memory=True)
 
 
 # Create model
